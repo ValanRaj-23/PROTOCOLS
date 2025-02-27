@@ -1,38 +1,41 @@
+
 module test_uart;
-reg reset, clk;
-reg d_in;
-reg [1:0] baud_sel;
-wire [7:0]rx;
+
+reg reset,clk,sent,p_sel;
+reg [7:0] d_in;
+reg [1:0]baud_sel;
 wire error;
-wire baud_clk;
-//reg [8:0]temp;
-//integer count;
-uart_rx uut ( clk,reset, d_in, baudclk_r,error, rx);
-baud_generator uut1 ( clk, reset, baud_sel, baud_clk);
-assign baudclk_r = baud_clk;
+wire [7:0]rx;
+wire test;
+
+top_module uut1(reset,clk,sent,p_sel,baud_sel,d_in,error,rx,test);
+
 
 initial begin
 	clk = 0;
-	forever #10 clk = ~clk;
+	forever #10 clk = ~ clk;
+end 
+
+initial
+begin 
+	reset = 0;
+	#30;
+	reset =1;
+	baud_sel = 2'b00;
+	d_in = 8'hAA;
+	p_sel = 0;
+	sent = 1;
 end
 
-initial begin
-	reset = 0;
-	#10;
-	reset = 1;
-	baud_sel=2'b10;
-end 
+//always @(posedge test) begin
+//	d_in = $random;
+//end
 
-
-always @(posedge baud_clk) 
-begin
-	d_in= $random;
-end 
 
 initial begin
-	$dumpfile("test.vcd");
-	$dumpvars;
-	#1000000;
-	$finish;
+$dumpfile("test.vcd");
+$dumpvars;
+#50000000;
+$finish;
 end
 endmodule
