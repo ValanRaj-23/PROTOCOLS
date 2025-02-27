@@ -1,10 +1,11 @@
-module uart_tx(input reset,
-		clk,
-		sent,
-		input [7:0]d_in,
-		input baudclk_t,
-		input p_sel,
-		output reg tx);
+module uart_tx(	input reset,
+				input 	clk,
+			 	input 	sent,
+				input [7:0] d_in,
+				input bclk_tx,
+				input p_sel,
+				output reg tx
+				);
 
 reg [10:0] t_data;
 reg [10:0] temp;
@@ -12,11 +13,11 @@ reg p_bit;
 reg [3:0] t_count;
 reg [2:0] ps, ns;
 
-	parameter [2:0] IDLE = 1,
-			RECEIVE = 1,
-		       PARITY = 2,
-			GEN = 3,
-	 		TRANSFER = 4;
+	parameter [2:0] IDLE = 0,
+					RECEIVE = 1,
+		       		PARITY = 2,
+					GEN = 3,
+	 				TRANSFER = 4;
 	
 
 always@(posedge clk, negedge reset)
@@ -35,30 +36,30 @@ end
 always@(*)
 begin
 	case(ps)
-		IDLE : begin
-			ns = !reset ? IDLE : RECEIVE;
-			t_count = 10;
-				end
+			IDLE : begin
+					ns = !reset ? IDLE : RECEIVE;
+					t_count = 10;
+					end
 		RECEIVE :begin
-		       	temp = d_in;
-			ns = PARITY;
-		end
+				       	temp = d_in;
+					ns = PARITY;
+					end
 		PARITY : begin
-			case(p_sel)
-				1'b0 : p_bit = !(^temp);
-				1'b1 : p_bit = ^temp;
-			endcase
-			ns = GEN;
-		end
-		GEN : begin
-			t_data = {1'b0, d_in, p_bit, 1'b1};
-			ns = sent ? TRANSFER : GEN;
+					case(p_sel)
+						1'b0 : p_bit = !(^temp);
+						1'b1 : p_bit = ^temp;
+					endcase
+					ns = GEN;
+					end
+		GEN : 	begin
+					t_data = {1'b0, d_in, p_bit, 1'b1};
+					ns = sent ? TRANSFER : GEN;
 
-		end
+					end
 		TRANSFER : begin
 					
 				if(t_count >= 0 && t_count <= 10)
-					if(baudclk_t)
+					if(bclk_tx)
 					begin
 						tx = t_data[t_count];
 						t_count = t_count - 1;
@@ -75,6 +76,5 @@ begin
 		end
 		default: ns = IDLE;
 	endcase
-end
-					
-endmodule		
+end				
+endmodule
