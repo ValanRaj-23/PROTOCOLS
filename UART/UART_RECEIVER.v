@@ -12,13 +12,13 @@ parameter [1:0] IDLE = 0,
                 PARITY = 2;
 
 reg [1:0] ps, ns;
-reg [9:0] temp;
+reg [10:0] temp;
 reg p_bit;
-integer count;
+reg [3:0] count;
 
 always @(posedge clk or negedge reset) begin
     if (!reset)
-        ps <= IDLE;
+        ps <= IDLE;   
     else
         ps <= ns;
 end
@@ -27,15 +27,15 @@ always @(*) begin
     case (ps)
         IDLE: begin
             error = 1'b0;
-            if (!d_in) begin  // Detect start bit
-                count = 9;
+            if (!d_in) begin
+		temp[10] = d_in;  // Detect start bit
                 ns = RECEIVE;
             end else
                 ns = IDLE;
         end 
 
         RECEIVE: begin
-            if (count < 0) 
+            if (count <0 && count <=9)
                 ns = PARITY;
             else
                 ns = RECEIVE;
