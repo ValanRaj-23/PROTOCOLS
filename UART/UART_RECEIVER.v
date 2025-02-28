@@ -1,5 +1,5 @@
 module uart_rx(
-    input clk, // system clock
+    input clk,
     input reset,
     input d_in,
     input bclk_rx,
@@ -12,13 +12,13 @@ parameter [1:0] IDLE = 0,
                 PARITY = 2;
 
 reg [1:0] ps, ns;
-reg [10:0] temp;
+reg [9:0] temp;
 reg p_bit;
-reg [3:0] count;
+integer count;
 
 always @(posedge clk or negedge reset) begin
     if (!reset)
-        ps <= IDLE;   
+        ps <= IDLE;
     else
         ps <= ns;
 end
@@ -27,24 +27,20 @@ always @(*) begin
     case (ps)
         IDLE: begin
             error = 1'b0;
-            if (!d_in) begin
-		temp[10] = d_in;  // Detect start bit
-                ns = RECEIVE;
-            end else
-                ns = IDLE;
+            ns = IDLE;
         end 
 
         RECEIVE: begin
-            if (count <0 && count <=9)
+            if (count == 0) 
                 ns = PARITY;
             else
                 ns = RECEIVE;
         end
 
         PARITY: begin
-            p_bit = ^temp[9:1];  // Compute parity
-            if (p_bit == temp[1]) begin
-                rx = temp[9:2];  // Extract data bits
+            p_bit = ^temp[9:2];
+            if (p_bit == 0) begin
+                rx = temp[9:2];
                 ns = IDLE;
             end else begin
                 error = 1'b1;
@@ -54,13 +50,32 @@ always @(*) begin
     endcase
 end
 
-// Capture data bits on bclk_rx
 always @(posedge bclk_rx or negedge reset) begin
-    if (!reset)
-        count <= 9;
-    else if (ps == RECEIVE) begin
-        temp[count] <= d_in;
-        count <= count - 1;
+    if (!reset) begin
+        count <= 10;
+        ps <= IDLE;
+    end 
+    else begin
+        case (ps)
+            IDLE: begin
+                if (!d_in) begin
+                    count <= 9;
+                    ps <= RECEIVE;
+                end
+            end
+
+            RECEIVE: begin
+                temp[count] <= d_in;
+                if (count == 0)
+                    ps <= PARITY;
+                else
+                    count <= count - 1;
+            end
+
+            PARITY: begin
+                ps <= IDLE;
+            end
+        endcase
     end
 end
 
