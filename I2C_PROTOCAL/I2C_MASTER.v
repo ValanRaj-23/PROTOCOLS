@@ -1,146 +1,152 @@
 module master(
-	input 		clk,
-	input 		rst,
-	input		run,
-	input		[7:0]addr,
-	input 		[7:0]data,
-	input		wr_en,
-	input		ack,
-	output		scl_m,
-	output		sda_m
-	);
+		input 	sys_clk,
+		input 	rst,
+  		input 	[7:0] data,
+  		input 	[7:0] addr,
+		input 	wr_bit,
+		input 	run,
+		output	scl_out,
+		inout	sda_out,
+  		output bit	i2c_clk
+);
 
-	reg [2:0]	present, next;
-	reg [3:0]	c_clk; 						//clk count
-  	reg [3:0]	counter; 					//clk count
-	reg 		scl_en;
-	reg 		sda_en;
-  	reg [7:0]	data_m;
-  	reg [7:0]	addr_m;
-	reg			clk_m;
+bit 	scl_en = 0;
+bit 	sda_en = 1;
+bit 	[7:0] data_mem;
+bit		[8:0] addr_mem;
+bit		[3:0] clk_counter	= 0;
+bit		[3:0] send_counter	= 0;	
+bit		sda_in_m;
+bit		[3:0]present, next;
 
-		
+parameter [3:0] IDLE 	= 0,
+				START	= 1,
+				ADDR	= 2,
+				R_ACK	= 3,
+  				DATA	= 4,
+  				STOP	= 5;
+  						
 
-	parameter [2:0] IDLE 	= 0,
-					START 	= 1,
-	       			ADDR	= 2,
-					R_ACK	= 3,
-					WRITE	= 4,
-					READ	= 5,
-					STOP	= 6;
+  
+assign	scl_out	= scl_en ? i2c_clk : 1;
+assign 	sda_out	= sda_en ? sda_in_m  : 1'bz;
 
 	
-	assign scl_m	= scl_en ? clk_m : 1;
-	assign sda_m	= sda_en ? din_m : 1;
-
-
-
-	always@(posedge clk)
+  
+  always@(posedge sys_clk) // seperate clk for i2c
+ begin 
+   if(clk_counter == 4)
 	begin
-		if(c_clk == 4)
-		begin
-			clk_m	<=	~clk_m;
-			c_clk	<=	0;
-		end
-		else
-			c_clk	<= 	c_clk + 1;
+		i2c_clk <= ~i2c_clk;
+		clk_counter <= 0;
 	end
+	else
+		clk_counter <= clk_counter + 1;
 
+end
 
+  
+  always@(posedge i2c_clk)
+begin
+	if(!rst)
+		present <= IDLE;
+	else
+		present	<= next;
+end
 
-	always@(posedge clk)
-	begin
-		if(!rst)
-		begin
-			clk_m	<= 0;
-          	c_clk	<= 0;
-			present <= IDLE;
-		end
-		else
-			present <= next;
-	end
-        
+  
+  always@(*)	// output line control
+begin
+  
+	case(present)
 
-  	always@(posedge clk_m)
-	begin
-		case(present)
-				
-          	IDLE	:if(run == 1)
-                  			begin
-                              
-								scl_en 	<=	0;
-								sda_en	<=	0;
-                  				next	<= IDLE;
-                              
-                            end
-          				else
-                          	next	<= START;
+		IDLE	:begin
+				scl_en 	<= 0;	
+                sda_en	<= 1;
+				end
 
-			START	:
-							begin
-                            
-								scl_en	<=	0;
-								sda_en	<=	1;
-                            	  
-                      			d_in 	<= 0;
-                  				data_m	<= data;
-                  				addr_m	<= addr;
-                              	counter	<= 7;
+		START	:begin
+				scl_en	<= 0;
+				sda_en	<= 1;
+			end
+	
+		ADDR	:begin
+				scl_en	<= 1;
+				sda_en	<= 1;
+			end
+		
+		R_ACK	:begin
+				scl_en	<= 1;
+				sda_en	<= 0;
+			end	
+      
+      	DATA	:begin
+          		scl_en	<= 1;
+          		sda_en 	<= 1;
+        		end
+      
+      	STOP	:begin
+          		scl_en	<= 0;
+          		sda_en	<= 1;
+        		end
+	endcase
+end
 
-                              	next	<=	ADDR;
-
-							end
- 
-
-         	ADDR	:	if(counter < 8)
-                  			begin
-                         
-								scl_en 	<= 	1;
-                              	sda_en	<=	addr_m[counter];
-                              	next	<=	ADDR;
-                              	
-                              	counter	<=	counter - 1;
-                              
-							end
-          					else
-                            begin
-                               	next	<= 	R_ACK;
-                           		counter <=	0;  	
-                            end
-          
-                              	
-                              	
-                              	
-          
-          	R_ACK	:	if(ack == 0)
-          						next	<=	WRITE;
-          					else
-                              begin
-            	                next	<=	IDLE;
-          						counter	<= 	7;
-                              end
-          
-          	WRITE	:	if(counter < 8)
-            			  begin
-                              	
-                              sda_en 	<=  data_m[counter]
-                              counter	<=	counter - 1;
-                              next		<=	WRITE;
-                            end
-          				else
-                          begin
-                           		counter	<= 0;
-                            	next	<=	W_ACK;
-                          end
-          
-         	W_ACK	:	begin
-                              next		<= 	IDLE;
-                        end
-           			
+  always@(posedge i2c_clk) // data storage
+    begin
+  
+	case(present)
+      	
+      	IDLE	:sda_in_m			<= 1;
           		
-		endcase
+
+		START	:begin
+				sda_in_m			<= 0;
+				data_mem 		<= data;
+          		addr_mem 		<= {addr,wr_bit};
+				send_counter	<= 8;
+				end
+
+		ADDR	:begin
+          		if(send_counter > 9)
+					send_counter 	<= 0;
+				else
+				begin
+					sda_in_m		<= addr_mem[send_counter];
+					send_counter 	<= send_counter - 1;
+				end
+				end
+
+		R_ACK	:	send_counter <= 7;
+				
+        DATA	:begin
+          		if(send_counter > 8)
+                  		send_counter		<= 0;
+          		else
+                  begin
+                    		sda_in_m		<= data_mem[send_counter];
+                    		send_counter	<= send_counter - 1;
+                  end
+        		end
+      
+      	STOP	: sda_in_m		<= 0;
+          
+	endcase
+end
+  
+always@(*)
+	begin
+	case(present)
+
+      		IDLE 	: 	next 	= run ? START : IDLE;
+     		START	: 	next	= ADDR;
+      		ADDR	: 	next 	= (send_counter > 9)	? R_ACK : ADDR;    
+      		R_ACK	:	next	= (sda_out == 0)		? DATA	: IDLE;
+      		DATA	:	next	= (send_counter > 8)	? STOP	: DATA;
+      		STOP	: 	next 	= IDLE;
+      
+	endcase
 	end
-
-
+			
 endmodule
 
