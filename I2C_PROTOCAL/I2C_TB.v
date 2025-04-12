@@ -5,8 +5,8 @@ reg 	[7:0] data;
 reg 	[7:0] addr;
 reg 	wr_bit;
 reg 	run;
-reg		sda_oe 		= 0;
-reg		sda_in_s 	= 1;
+reg	sda_oe 		= 0;
+reg	sda_in_s 	= 1;
 wire 	scl_out;
 wire	sda_out;
 wire	i2c_clk;
@@ -48,7 +48,7 @@ end
 
   initial begin
 
-   	sda_in_s = 	1;
+    sda_in_s = 	1;
     sda_oe   =	0;
     
     #1043;
