@@ -61,34 +61,39 @@ begin
 	case(present)
 
 		IDLE	:begin
-				scl_en 	<= 0;	
-                sda_en	<= 1;
-				end
+				scl_en 	= 0;	
+                sda_en	= 1;
+          		sda_in_m = 1;
+			end
 
 		START	:begin
-				scl_en	<= 0;
-				sda_en	<= 1;
+				scl_en	= 0;
+				sda_en	= 1;
+          		sda_in_m = 0;
 			end
 	
 		ADDR	:begin
-				scl_en	<= 1;
-				sda_en	<= 1;
+				scl_en	= 1;
+				sda_en	= 1;
 			end
 		
 		R_ACK	:begin
-				scl_en	<= 1;
-				sda_en	<= 0;
+				scl_en	= 1;
+				sda_en	= 0;
+          		sda_in_m = 0;
 			end	
       
       	DATA	:begin
-          		scl_en	<= 1;
-          		sda_en 	<= 1;
+          		scl_en	= 1;
+          		sda_en 	= 1;
         		end
       
       	STOP	:begin
-          		scl_en	<= 0;
-          		sda_en	<= 1;
-        		end
+          		scl_en	= 0;
+          		sda_en	= 1;
+          		sda_in_m = 1;
+
+        	end
 	endcase
 end
 
@@ -97,11 +102,11 @@ end
   
 	case(present)
       	
-      	IDLE	:sda_in_m			<= 1;
+//       	IDLE	:sda_in_m			<= 1;
           		
 
 		START	:begin
-				sda_in_m			<= 0;
+// 				sda_in_m			<= 0;
 				data_mem 		<= data;
           		addr_mem 		<= {addr,wr_bit};
 				send_counter	<= 8;
@@ -121,15 +126,15 @@ end
 				
         DATA	:begin
           		if(send_counter > 8)
-                  		send_counter		<= 0;
+                  send_counter		<= 0;
           		else
                   begin
-                    		sda_in_m		<= data_mem[send_counter];
-                    		send_counter	<= send_counter - 1;
+                    sda_in_m		<= data_mem[send_counter];
+                    send_counter	<= send_counter - 1;
                   end
         		end
       
-      	STOP	: sda_in_m		<= 0;
+//       	STOP	: sda_in_m		<= 0;
           
 	endcase
 end
@@ -138,15 +143,15 @@ always@(*)
 	begin
 	case(present)
 
-      		IDLE 	: 	next 	= run ? START : IDLE;
-     		START	: 	next	= ADDR;
-      		ADDR	: 	next 	= (send_counter > 9)	? R_ACK : ADDR;    
-      		R_ACK	:	next	= (sda_out == 0)		? DATA	: IDLE;
-      		DATA	:	next	= (send_counter > 8)	? STOP	: DATA;
-      		STOP	: 	next 	= IDLE;
+	  IDLE 	: 	next 	= run ? START : IDLE;
+	  START	: 	next	= ADDR;
+      ADDR	: 	next 	= (send_counter > 9)	? R_ACK : ADDR;    
+      R_ACK	:	next	= (sda_out == 0)		? DATA	: IDLE;
+      DATA	:	next	= (send_counter > 8)	? STOP	: DATA;
+      STOP	: 	next 	= IDLE;
       
 	endcase
 	end
-			
+ 
 endmodule
 
