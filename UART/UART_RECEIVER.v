@@ -7,14 +7,14 @@ module uart_rx(
     output reg [7:0] rx
 );
 
-parameter [1:0] IDLE = 0, 
-                RECEIVE = 1,
-                PARITY = 2;
-
 reg [1:0] ps, ns;
 reg [9:0] temp;
 reg p_bit;
 integer count;
+
+    parameter [1:0] IDLE = 0, 
+                    RECEIVE = 1,
+                    PARITY = 2;
 
 always @(posedge clk or negedge reset) begin
     if (!reset)
