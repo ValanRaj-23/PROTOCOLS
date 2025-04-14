@@ -1,11 +1,11 @@
 module uart_tx(	input reset,
-				input 	clk,
-			 	input 	sent,
-				input [7:0] d_in,
-				input bclk_tx,
-				input p_sel,
-				output reg tx
-				);
+		input 	clk,
+		input 	sent,
+		input 	[7:0] d_in,
+		input 	bclk_tx,
+		input 	p_sel,
+		output 	reg tx
+		);
 
 reg [10:0] t_data;
 reg [10:0] temp;
@@ -14,10 +14,10 @@ reg [3:0] t_count;
 reg [2:0] ps, ns;
 
 	parameter [2:0] IDLE = 0,
-					RECEIVE = 1,
-		       		PARITY = 2,
-					GEN = 3,
-	 				TRANSFER = 4;
+			RECEIVE = 1,
+	       		PARITY = 2,
+			GEN = 3,
+			TRANSFER = 4;
 	
 
 always@(posedge clk, negedge reset)
@@ -36,7 +36,8 @@ end
 always@(*)
 begin
 	case(ps)
-			IDLE : begin
+		
+		IDLE : begin
 					ns = !reset ? IDLE : RECEIVE;
 					t_count = 10;
 					end
