@@ -28,8 +28,8 @@ parameter [3:0] IDLE 	= 0,
   						
 
   
-assign	scl_out	= scl_en ? i2c_clk : 1;
-assign 	sda_out	= sda_en ? sda_in_m  : 1'bz;
+assign	scl_out	= scl_en ? i2c_clk : 1;		//for inout ports scl
+assign 	sda_out	= sda_en ? sda_in_m  : 1'bz;	//for inout ports sda
 
 	
   
