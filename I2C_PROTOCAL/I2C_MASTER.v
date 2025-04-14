@@ -145,7 +145,7 @@ always@(*)
 
 	  IDLE 	: 	next 	= run ? START : IDLE;
 	  START	: 	next	= ADDR;
-      ADDR	: 	next 	= (send_counter > 9)	? R_ACK : ADDR;    
+      	ADDR	: 	next 	= (send_counter > 9)	? R_ACK : ADDR;    
       R_ACK	:	next	= (sda_out == 0)		? DATA	: IDLE;
       DATA	:	next	= (send_counter > 8)	? STOP	: DATA;
       STOP	: 	next 	= IDLE;
