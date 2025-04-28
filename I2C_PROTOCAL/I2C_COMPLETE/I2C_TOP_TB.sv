@@ -40,7 +40,9 @@ initial begin
 		wr_bit	= 1; 
 		run 	= 1;
 		data 	= 8'h12;
-		addr	= 8'hFF;
+		addr	= 8'hA;
+	#40
+  		run		= 0;
 end
 
 endmodule
