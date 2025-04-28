@@ -6,7 +6,7 @@ module slave(
 	bit	[3:0]data_counter;
 	bit	[3:0]addr_counter ;
 	bit	[7:0]data_mem;
-    	bit	[7:0]addr_mem;
+  	bit	[7:0]addr_mem;
 	bit	[3:0]present, next;
 	bit	sda_en_s = 0;
 	bit	sda_in_s = 0;
