@@ -1,4 +1,4 @@
-thismodule master(
+module master(
 		input 	sys_clk,
 		input 	rst,
   		input 	[7:0] data,
@@ -11,12 +11,14 @@ thismodule master(
 );
 
 bit 	scl_en_m = 0;
+bit		scl_in_m;
 bit 	sda_en_m = 1;
+bit		sda_in_m = 1;
+  
 bit 	[7:0] data_mem;
 bit		[8:0] addr_mem;
 bit		[3:0] clk_counter	= 0;
 bit		[3:0] send_counter	= 0;	
-bit		sda_in_m = 1;
 bit		[3:0]present, next;
 
 parameter [3:0] IDLE 	= 0,
@@ -28,7 +30,7 @@ parameter [3:0] IDLE 	= 0,
   						
 
   
-assign	scl_out_m	= scl_en_m ? i2c_clk 	: 1;
+assign	scl_out_m	= scl_en_m ? i2c_clk 	: scl_in_m;
 assign 	sda_out_m	= sda_en_m ? sda_in_m  	: 1'bz;
 
 	
@@ -147,6 +149,8 @@ always@(*)
       
 	endcase
 	end
+  
+  assign scl_in_m = (present == START) ? 1'b0 : 1'b1;
  
 endmodule
 
