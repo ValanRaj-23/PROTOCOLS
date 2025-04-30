@@ -7,7 +7,7 @@ module master(
 		input 	run,
 		output	scl_out_m,
 		inout	sda_out_m,
-  		output bit	i2c_clk
+  		output 	bit	i2c_clk
 );
 
 bit 	scl_en_m = 0;
@@ -21,6 +21,7 @@ bit		[3:0] clk_counter	= 0;
 bit		[3:0] send_counter	= 0;	
 bit		[3:0]present, next;
 
+  
 parameter [3:0] IDLE 	= 0,
 				START	= 1,
 				ADDR	= 2,
@@ -35,7 +36,7 @@ assign 	sda_out_m	= sda_en_m ? sda_in_m  	: 1'bz;
 
 	
   
-  always@(posedge sys_clk) // seperate clk for i2c
+ always@(posedge sys_clk) // seperate clk for i2c
  begin 
    if(clk_counter == 4)
 	begin
@@ -73,24 +74,24 @@ begin
           		sda_in_m 	= 0;
 				scl_en_m	= 0;
 				sda_en_m	= 1;
-			end
+				end
 	
 		ADDR	:begin
 				scl_en_m	= 1;
 				sda_en_m	= 1;
-			end
+				end
 		
 		R_ACK	:begin
 				scl_en_m	= 1;
 				sda_en_m	= 0;
-			end	
+				end	
       
-      		DATA	:begin
+      	DATA	:begin
           		scl_en_m	= 1;
           		sda_en_m	= 1;
         		end
       
-      		STOP	:begin
+      	STOP	:begin
           		scl_en_m	= 0;
           		sda_en_m	= 1;
           		sda_in_m	= 1;
@@ -98,6 +99,7 @@ begin
 	endcase
 end
 
+  
   always@(posedge i2c_clk) // data storage
     begin
   
@@ -123,35 +125,34 @@ end
 
 		R_ACK	:	send_counter <= 7;
 				
-        	DATA	:begin
-          		if(send_counter > 8)
+        DATA	:begin
+                	if(send_counter > 8)
                   	send_counter		<= 0;
-          		else
+          			else
                  	begin
                  		sda_in_m		<= data_mem[send_counter];
                     	send_counter	<= send_counter - 1;
                   	end
-        		end
-      
+        		end      
 	endcase
 end
   
+  
+  
 always@(*)
 	begin
-	case(present)
-
-	  IDLE 	: 	next 	= run ? START : IDLE;
-	  START	: 	next	= ADDR;
-      ADDR	: 	next 	= (send_counter == 0)	? R_ACK : ADDR;    
-      R_ACK	:	next	= (sda_out_m 	== 0)	? DATA	: IDLE;
-      DATA	:	next	= (send_counter == 0)	? STOP	: DATA;
-      STOP	: 	next 	= IDLE;
+		case(present)
+		
+	  		IDLE 	: 	next 	= run ? START : IDLE;
+	  		START	: 	next	= ADDR;
+      			ADDR	: 	next 	= (send_counter == 0)	? R_ACK : ADDR;    
+      			R_ACK	:	next	= (sda_out_m 	== 0)	? DATA	: IDLE;
+      			DATA	:	next	= (send_counter == 0)	? STOP	: DATA;
+      			STOP	: 	next 	= IDLE;
       
-	endcase
+		endcase
 	end
   
-  assign scl_in_m = (present == START) ? 1'b0 : 1'b1;
+assign scl_in_m = (present == START) || (present == STOP) ? 1'b0 : 1'b1;
  
 endmodule
-
-
