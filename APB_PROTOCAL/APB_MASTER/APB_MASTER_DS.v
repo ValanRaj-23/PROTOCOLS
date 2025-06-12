@@ -15,7 +15,7 @@ module apb_master(
     input       [3:0]   apb_read_addr,
     input       [3:0]   apb_write_addr,
     input       [15:0]  apb_write_data,
-    output	    [15:0]  apb_read_data
+    output	[15:0]  apb_read_data
 );
 
     parameter 	IDLE 	= 2'b00,
@@ -100,10 +100,11 @@ module apb_master(
 
     	assign pselx   =   (present != IDLE);
     	assign penable =   (present == ACCESS);
-    	assign pwrite  =  ((present == SETUP) || (present == ACCESS)) 	? reg_wr  : 1'b0;
-    	assign paddr   =  ((present == SETUP) || (present == ACCESS))	? reg_addr  : 4'd0;
+    	assign pwrite  =  ((present == SETUP) || (present == ACCESS)) 	? reg_wr  	: 1'b0;
+    	assign paddr   =  ((present == SETUP) || (present == ACCESS))	? reg_addr  	: 4'd0;
+	
     	assign pwdata           = (((present == SETUP) || (present == ACCESS)) && read_write)	? reg_data 	: 16'd0;
-	    assign apb_read_data    = (((present == SETUP) || (present == ACCESS)) && !read_write)	? reg_data 	: 16'd0;
+	assign apb_read_data    = (((present == SETUP) || (present == ACCESS)) && !read_write)	? reg_data 	: 16'd0;
 
 
 endmodule
